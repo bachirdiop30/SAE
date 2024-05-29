@@ -10,10 +10,11 @@ if 'data_name' in st.session_state:
 
     # Visualisation des variables catégorielles
     st.subheader("Visualisation des variables catégorielles")
-    if df.select_dtypes(include=['object', 'category']).columns.empty:
+    categorical_columns = df.select_dtypes(include=['object', 'category']).columns
+    if categorical_columns.empty:
         st.write("Aucune variable catégorielle trouvée.")
     else:
-        variable_cat = st.selectbox("Choisir une variable catégorielle", df.select_dtypes(include=['object', 'category']).columns)
+        variable_cat = st.selectbox("Choisir une variable catégorielle", categorical_columns)
         sns.set_style("darkgrid")
         fig, ax = plt.subplots(figsize=(20, 6))
         if len(df[variable_cat].unique()) > 50:
@@ -29,7 +30,7 @@ if 'data_name' in st.session_state:
         plt.ylabel('Fréquence')
         plt.title(f'Diagramme en barres: {variable_cat}')
         st.pyplot(fig)
-        ab=pd.DataFrame(df[variable_cat].value_counts().sort_values(ascending=False)).head(20)
+        ab = pd.DataFrame(df[variable_cat].value_counts().sort_values(ascending=False)).head(20)
         st.write(ab)
 
     # Visualisation des variables numériques
@@ -40,7 +41,7 @@ if 'data_name' in st.session_state:
     else:
         @st.cache_data  # Utilisation du cache pour éviter de recalculer à chaque interaction
         def plot_data(variable):
-            fig, axs = plt.subplots(1,2, figsize=(12, 6))
+            fig, axs = plt.subplots(1, 2, figsize=(12, 6))
             sns.histplot(data=df, x=variable, ax=axs[0], bins=10)
             axs[0].set_xlabel(variable)
             axs[0].set_ylabel('Fréquence')
@@ -64,18 +65,23 @@ if 'data_name' in st.session_state:
     # Analyse multivariée
     st.header("Analyse multi-variée")
 
-    if 'data_name' in st.session_state:
-        df = st.session_state['data_name']  # Accède directement au DataFrame stocké
+    numerical_variables = df.select_dtypes(include=['int', 'float']).columns.tolist()
+    categorical_variables = df.select_dtypes(include=['object', 'category']).columns.tolist()
 
-        numerical_variables = df.select_dtypes(include=['int', 'float']).columns.tolist()
-        categorical_variables = df.select_dtypes(include=['object', 'category']).columns.tolist()
+    plot_type = st.radio(
+        "Choisir un type de graphique",
+        ["Nuage de points (scatter)", "Boîte à moustaches (boxplot)", "Histogramme (histplot)"],
+        index=0,
+        help="Sélectionnez le type de graphique pour l'analyse multivariée"
+    )
 
-        x_variable = st.selectbox("Choisir une variable pour l'axe x", numerical_variables + categorical_variables)
-        y_variable = st.selectbox("Choisir une variable pour l'axe y", [None] + numerical_variables + categorical_variables)
+    if plot_type == "Nuage de points (scatter)":
+        st.write("Pour un nuage de points, choisissez deux variables numériques.")
+        x_variable = st.selectbox("Choisir une variable pour l'axe x", numerical_variables)
+        y_variable = st.selectbox("Choisir une variable pour l'axe y", numerical_variables)
         hue_variable = st.selectbox("Choisir une variable pour la teinte", [None] + categorical_variables)
-        plot_type = st.selectbox("Choisir un type de graphique", ["scatter", "boxplot", "histplot"])
-
-        if plot_type == "scatter" and x_variable and y_variable and x_variable in numerical_variables and y_variable in numerical_variables:
+        
+        if x_variable and y_variable:
             fig, ax = plt.subplots()
             sns.scatterplot(data=df, x=x_variable, y=y_variable, hue=hue_variable, ax=ax)
             ax.set_xlabel(x_variable)
@@ -83,7 +89,13 @@ if 'data_name' in st.session_state:
             ax.set_title("Nuage de points")
             st.pyplot(fig)
 
-        elif plot_type == "boxplot" and x_variable and y_variable and x_variable in categorical_variables and y_variable in numerical_variables:
+    elif plot_type == "Boîte à moustaches (boxplot)":
+        st.write("Pour une boîte à moustaches, choisissez une variable catégorielle pour l'axe x et une variable numérique pour l'axe y.")
+        x_variable = st.selectbox("Choisir une variable pour l'axe x", categorical_variables)
+        y_variable = st.selectbox("Choisir une variable pour l'axe y", numerical_variables)
+        hue_variable = st.selectbox("Choisir une variable pour la teinte", [None] + categorical_variables)
+        
+        if x_variable and y_variable:
             fig, ax = plt.subplots()
             sns.boxplot(data=df, x=x_variable, y=y_variable, hue=hue_variable, ax=ax)
             ax.set_xlabel(x_variable)
@@ -91,7 +103,12 @@ if 'data_name' in st.session_state:
             ax.set_title("Boxplot")
             st.pyplot(fig)
 
-        elif plot_type == "histplot" and x_variable and hue_variable and x_variable in categorical_variables:
+    elif plot_type == "Histogramme (histplot)":
+        st.write("Pour un histogramme, choisissez une variable catégorielle.")
+        x_variable = st.selectbox("Choisir une variable pour l'axe x", categorical_variables)
+        hue_variable = st.selectbox("Choisir une variable pour la teinte", [None] + categorical_variables)
+        
+        if x_variable:
             fig, ax = plt.subplots()
             sns.histplot(data=df, x=x_variable, hue=hue_variable, multiple="stack", ax=ax)
             ax.set_xlabel(x_variable)
@@ -99,8 +116,8 @@ if 'data_name' in st.session_state:
             ax.set_title("Histogramme")
             st.pyplot(fig)
 
-        if y_variable and y_variable in numerical_variables:
-            st.write(df.groupby([x_variable, hue_variable])[y_variable].describe())
-
     else:
-        st.write("Aucune donnée chargée. Veuillez retourner à l'accueil et télécharger un fichier.")
+        st.write("Veuillez choisir un type de graphique pour l'analyse.")
+
+else:
+    st.write("Aucune donnée chargée. Veuillez retourner à l'accueil et télécharger un fichier.")
