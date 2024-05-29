@@ -56,8 +56,8 @@ if uploaded_file:
     df = load_data(uploaded_file)
     if df is not None:
         st.session_state["data_name"] = df  # Enregistrer le DataFrame dans le state de la session
-        st.write("Fichier chargé avec succès!")
-        st.dataframe(df)
+        st.success("Fichier chargé avec succès!")
+        st.dataframe(df.head())
         st.write("Colonnes de type 'object' ou 'category':")
         st.dataframe(df.select_dtypes(include=['object', 'category']))
     else:
