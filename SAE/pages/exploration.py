@@ -39,12 +39,13 @@ if "data_name" in st.session_state:
         st.write(df.select_dtypes(include=['object', 'category']).describe())
 
     # Troisième slider pour filtrer les valeurs NaN
-    st.subheader("3e Slider : Filtrage des valeurs NaN")
+    st.subheader("Filtrage des valeurs NaN")
     percentage_nan = st.slider("Choisissez le pourcentage de NaN à filtrer", 0, 100, 0)
-    threshold = (100 - percentage_nan) / 100
-    df_filtered = df.dropna(axis=1, thresh=int(threshold * len(df)))
-    st.write("DataFrame après filtration des NaN :")
-    st.dataframe(df_filtered)
+    threshold =  df.isnull().mean() * 100
+    columns_to_display = threshold[threshold >= percentage_nan].index
+    st.dataframe(df[columns_to_display].head())
+    st.write("Colonnes de type 'object' ou 'category' avec pourcentage de valeurs manquantes:")
+    st.dataframe(columns_to_display)
 
     # Quatrième slider pour afficher la corrélation entre les variables numériques
     st.subheader("4e Slider : Corrélation entre les variables numériques")

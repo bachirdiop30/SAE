@@ -22,7 +22,6 @@ os.environ["HUGGINGFACEHUB_API_TOKEN"] = HUGGINGFACEHUB_API_TOKEN
 
 st.title("Votre Assistant IA")
 
-
 # Charger le modèle 
 template = """Question: {question}
 Answer: Let's think step by step."""
