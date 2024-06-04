@@ -11,10 +11,6 @@ file_formats = {
     "xlsb": pd.read_excel,
 }
 
-# Fonction pour effacer l'état de soumission
-def clear_submit():
-    st.session_state["submit"] = False
-
 # Fonction pour charger les données avec mise en cache
 @st.cache_data(ttl="2h")
 def load_data(uploaded_file):
@@ -35,30 +31,20 @@ def load_data(uploaded_file):
         st.error(f"Format de fichier non supporté: {ext}")
         return None
 
-# Configuration de la page
-st.set_page_config(page_title="LangChain: Chat with pandas DataFrame", page_icon="🦜")
-st.title("🦜 LangChain: Chat with pandas DataFrame")
-
-# Téléchargement de fichier
-uploaded_file = st.file_uploader(
-    "Upload a Data file",
-    type=list(file_formats.keys()),
-    help="Formats de fichier supportés: CSV, XLS, XLSX, XLSM, XLSB",
-    on_change=clear_submit,
+# Section de la barre latérale
+st.sidebar.title("Accueil du site")
+uploaded_file = st.sidebar.file_uploader(
+    "Choisir un fichier", 
+    type=list(file_formats.keys()), 
+    help="Formats de fichier supportés: CSV, XLS, XLSX, XLSM, XLSB"
 )
 
-if not uploaded_file:
-    st.warning(
-        "Cette application utilise le `PythonAstREPLTool` de LangChain qui est vulnérable à l'exécution de code arbitraire. Utilisez cette application avec précaution."
-    )
-
-if uploaded_file:
+if uploaded_file is not None:
     df = load_data(uploaded_file)
     if df is not None:
-        st.session_state["data_name"] = df  # Enregistrer le DataFrame dans le state de la session
-        st.success("Fichier chargé avec succès!")
-        st.dataframe(df.head())
-        st.write("Colonnes de type 'object' ou 'category':")
-        st.dataframe(df.select_dtypes(include=['object', 'category']))
+        st.dataframe(df)
+        st.session_state["data_name"] = df
     else:
         st.error("Erreur lors du chargement du fichier.")
+else:
+    st.sidebar.warning("Veuillez charger un fichier svp !", icon="⚠️")
